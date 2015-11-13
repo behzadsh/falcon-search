@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'http://edition.cnn.com/'
+    'http://edition.cnn.com/robots.txt'
 ];
