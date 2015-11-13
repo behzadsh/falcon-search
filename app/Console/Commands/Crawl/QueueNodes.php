@@ -107,7 +107,9 @@ class QueueNodes extends Command
         foreach ($urls as $url) {
             if ($this->isSitemap($url)) {
                 if ($deep) {
-                    $this->publishLinks($this->fetchUrls($url), false);
+                    $this->publishLinks($this->fetchUrls(
+                        new \SimpleXMLElement(file_get_contents($url))
+                    ), false);
                 }
                 continue;
             }
