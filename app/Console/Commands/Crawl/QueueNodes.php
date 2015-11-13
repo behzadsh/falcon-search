@@ -59,23 +59,29 @@ class QueueNodes extends Command
         $seeds = config('seeds');
 
         foreach ($seeds as $seed) {
+            $this->info("Reading '$seed'");
             try {
                 $this->parser->setSource(file_get_contents($seed));
             } catch (\Exception $e) {
+                $this->warn("Error reading '$seed'. File may not exists.");
                 continue;
             }
 
+            $this->info("Filtering sitemaps from robot.txt");
             /** @var Directive[] $sitemaps */
             $sitemaps = $this->parser->getFile()
                                      ->directiveList()
                                      ->filter(['field' => 'sitemap'])
                                      ->get();
 
+            $this->info('Getting urls');
             $urls = [];
             foreach ($sitemaps as $sitemap) {
                 $urls = array_merge($urls, $this->gatherLinks((string) $sitemap->getValue()));
             }
+            $this->info(count($urls) . ' URL(s) found.');
 
+            $this->info('Publish links to the channel');
             $this->publishLinks($urls);
         }
     }
@@ -106,16 +112,21 @@ class QueueNodes extends Command
     {
         foreach ($urls as $url) {
             if ($this->isSitemap($url)) {
+                $this->comment('URL is a sitemap');
                 if ($deep) {
+                    $this->comment('Getting sitemap links');
                     $this->publishLinks($this->fetchUrls(
                         new \SimpleXMLElement(file_get_contents($url))
                     ), false);
+                } else {
+                    $this->comment('Ignoring the sitemap due crawl dept');
                 }
                 continue;
             }
 
             $this->redis->publish('nodes-channel', $url);
         }
+        $this->info(count($urls) . ' URL(s) published to the channel.');
     }
 
     protected function isSitemap($url)
