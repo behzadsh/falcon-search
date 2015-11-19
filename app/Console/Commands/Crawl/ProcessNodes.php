@@ -3,29 +3,38 @@
 namespace FalconSearch\Console\Commands\Crawl;
 
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Redis\Database;
 
-class FetchNodesData extends Command
+class ProcessNodes extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'crawl:get-nodes';
+    protected $signature = 'crawl:process-nodes';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Crawl nodes data and index them';
+
+    /**
+     * @var Database
+     */
+    protected $redis;
 
     /**
      * Create a new command instance.
+     *
+     * @param Database $redis
      */
-    public function __construct()
+    public function __construct(Database $redis)
     {
         parent::__construct();
+        $this->redis = $redis;
     }
 
     /**
@@ -35,6 +44,6 @@ class FetchNodesData extends Command
      */
     public function handle()
     {
-        //
     }
+
 }

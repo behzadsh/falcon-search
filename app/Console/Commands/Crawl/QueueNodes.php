@@ -15,14 +15,14 @@ class QueueNodes extends Command
      *
      * @var string
      */
-    protected $signature = 'crawl:get-nodes';
+    protected $signature = 'crawl:queue-nodes';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Queue seeds\' sitemaps.';
+    protected $description = 'Queue seeds\' nodes from seeds\' sitemap.';
 
     /**
      * @var Parser
