@@ -31,6 +31,7 @@ class ProcessNodes extends Command
         'iframe',
         'form',
         'header',
+        'footer',
         'nav',
         'navbar',
         'aside',
@@ -73,7 +74,7 @@ class ProcessNodes extends Command
         $this->redis->subscribe(['nodes-channel'], function ($url) {
             $cachePage = storage_path('caches/' . md5($url) . '.html');
             if (!file_exists($cachePage)) {
-                file_put_contents($cachePage, file_get_contents($url));
+                file_put_contents($cachePage, html_entity_decode(file_get_contents($url)));
             }
             $this->dom->load($cachePage);
             $this->info($this->stripTags($this->cleanContent($this->dom->root)));
@@ -84,25 +85,27 @@ class ProcessNodes extends Command
     {
         if ($node->hasChildren()) {
             foreach ($node->getChildren() as &$child) {
-                if ($this->shoulIgnore($child->getTag()->name())) {
+                if ($this->shoulIgnore($child)) {
                     $node = $node->removeChild($child->id());
                 } else {
                     $child = $this->cleanContent($child);
                 }
             }
+        } elseif (empty($node->text)) {
+            return null;
         }
 
         return $node;
     }
 
-    protected function shoulIgnore($name)
+    protected function shoulIgnore(Dom\AbstractNode $node)
     {
-        return in_array($name, $this->ignoringTags);
+        return in_array($node->getTag()->name(), $this->ignoringTags);
     }
 
     protected function stripTags($content)
     {
-        return trim(preg_replace('/\s+/', ' ', preg_replace('/<[^>]+>/', ' ', $content)));
+         return trim(preg_replace('/\s+/', ' ', preg_replace('/<[^>]+>/', ' ', $content)));
     }
 
 }
