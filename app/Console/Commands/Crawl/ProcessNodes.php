@@ -2,6 +2,8 @@
 
 namespace FalconSearch\Console\Commands\Crawl;
 
+use Elasticsearch\Client;
+use Elasticsearch\Common\Exceptions\ElasticsearchException;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Redis\Database;
 use PHPHtmlParser\Dom;
@@ -47,6 +49,11 @@ class ProcessNodes extends Command
     protected $redis;
 
     /**
+     * @var Client
+     */
+    protected $client;
+
+    /**
      * @var Dom
      */
     protected $dom;
@@ -55,12 +62,15 @@ class ProcessNodes extends Command
      * Create a new command instance.
      *
      * @param Database $redis
+     * @param Client   $client
      * @param Dom      $dom
      */
-    public function __construct(Database $redis, Dom $dom)
+    public function __construct(Database $redis, Client $client, Dom $dom)
     {
         parent::__construct();
         $this->redis = $redis;
+        $this->database = new \Predis\Client();
+        $this->client = $client;
         $this->dom = $dom;
     }
 
@@ -77,7 +87,11 @@ class ProcessNodes extends Command
                 file_put_contents($cachePage, html_entity_decode(file_get_contents($url)));
             }
             $this->dom->load($cachePage);
-            $this->info($this->stripTags($this->cleanContent($this->dom->root)));
+
+            $title = $this->dom->getElementsByTag('title')[0]->text;
+            $content = $this->stripTags($this->cleanContent($this->dom->root));
+
+            $this->saveNode($title, $content, $url);
         });
     }
 
@@ -105,7 +119,41 @@ class ProcessNodes extends Command
 
     protected function stripTags($content)
     {
-         return trim(preg_replace('/\s+/', ' ', preg_replace('/<[^>]+>/', ' ', $content)));
+        return trim(preg_replace('/\s+/', ' ', preg_replace('/<[^>]+>/', ' ', $content)));
+    }
+
+    protected function saveNode($title, $content, $url)
+    {
+        $hashId = md5($url);
+        $this->database->hMSet('sites:' . $hashId, [
+            'title'   => $title,
+            'content' => $content,
+            'url'     => $url
+        ]);
+
+        $params = [
+            'index' => 'sites',
+            'type'  => 'default',
+            'id'    => $hashId,
+            'body'  => [
+                'title'   => $title,
+                'content' => $content,
+                'hash_id' => $hashId
+            ]
+        ];
+
+        try {
+            $response = $this->client->index($params);
+            if (!$response['created']) {
+                $this->comment("Content of $url is updated. [version: {$response['_version']}]");
+            }
+        } catch (ElasticsearchException $e) {
+            $this->error("Cannot Index content of $url");
+            $this->database->lpush('failed_nodes', json_encode([
+                'error'  => $e->getMessage(),
+                'params' => $params
+            ]));
+        }
     }
 
 }
