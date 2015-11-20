@@ -74,6 +74,7 @@ class CreateElasticIndex extends Command
         } catch (Missing404Exception $e) {
             $this->info('Index not found, createing now...');
             $this->client->indices()->create($this->config->get('elastic'));
+            $this->client->indices()->putMapping($this->getMappingParams());
             $this->info('Index created with settings and mappings!');
         }
     }
