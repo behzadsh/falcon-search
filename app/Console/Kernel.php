@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         \FalconSearch\Console\Commands\Crawl\QueueNodes::class,
         \FalconSearch\Console\Commands\Crawl\ProcessNodes::class,
+        \FalconSearch\Console\Commands\CreateElasticIndex::class
     ];
 
     /**
