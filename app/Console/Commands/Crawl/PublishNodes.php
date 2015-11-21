@@ -7,7 +7,7 @@ use Illuminate\Contracts\Redis\Database;
 use webignition\RobotsTxt\Directive\Directive;
 use webignition\RobotsTxt\File\Parser;
 
-class QueueNodes extends Command
+class PublishNodes extends Command
 {
 
     /**
@@ -15,14 +15,14 @@ class QueueNodes extends Command
      *
      * @var string
      */
-    protected $signature = 'crawl:queue-nodes';
+    protected $signature = 'crawl:publish-nodes';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Queue seeds\' nodes from seeds\' sitemap.';
+    protected $description = 'Publish seeds\' nodes on redis channel from seeds\' sitemap.';
 
     /**
      * @var Parser

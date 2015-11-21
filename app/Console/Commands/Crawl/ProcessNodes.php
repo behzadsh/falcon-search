@@ -130,6 +130,7 @@ class ProcessNodes extends Command
             'content' => $content,
             'url'     => $url
         ]);
+        $this->comment("Content of $url stored/updated in redis");
 
         $params = [
             'index' => 'sites',
@@ -145,7 +146,9 @@ class ProcessNodes extends Command
         try {
             $response = $this->client->index($params);
             if (!$response['created']) {
-                $this->comment("Content of $url is updated. [version: {$response['_version']}]");
+                $this->comment("Content of $url has updated. [version: {$response['_version']}]");
+            } else {
+                $this->comment("Content of $url indexed.");
             }
         } catch (ElasticsearchException $e) {
             $this->error("Cannot Index content of $url");

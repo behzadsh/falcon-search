@@ -13,7 +13,7 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        \FalconSearch\Console\Commands\Crawl\QueueNodes::class,
+        \FalconSearch\Console\Commands\Crawl\PublishNodes::class,
         \FalconSearch\Console\Commands\Crawl\ProcessNodes::class,
         \FalconSearch\Console\Commands\CreateElasticIndex::class
     ];
