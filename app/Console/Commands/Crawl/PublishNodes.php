@@ -36,6 +36,11 @@ class PublishNodes extends Command
 
     protected $dept = 0;
 
+    protected $count = [
+        'failed'   => 0,
+        'succeeed' => 0
+    ];
+
     /**
      * Create a new command instance.
      *
@@ -59,7 +64,6 @@ class PublishNodes extends Command
         $seeds = config('seeds');
 
         foreach ($seeds as $seed) {
-            $this->info("Reading '$seed'");
             try {
                 $this->parser->setSource(file_get_contents($seed));
             } catch (\Exception $e) {
@@ -67,22 +71,23 @@ class PublishNodes extends Command
                 continue;
             }
 
-            $this->info("Filtering sitemaps from robot.txt");
             /** @var Directive[] $sitemaps */
             $sitemaps = $this->parser->getFile()
                                      ->directiveList()
                                      ->filter(['field' => 'sitemap'])
                                      ->get();
 
-            $this->info('Getting urls');
             $urls = [];
             foreach ($sitemaps as $sitemap) {
                 $urls = array_merge($urls, $this->gatherLinks((string) $sitemap->getValue()));
             }
-            $this->info(count($urls) . ' URL(s) found.');
-
-            $this->info('Publish links to the channel');
             $this->publishLinks($urls);
+        }
+
+        $this->info("{$this->count['succeeed']} node(s) published on channel.");
+
+        if ($this->count['failed'] > 0) {
+            $this->warn("{$this->count['failed']} node(s) failed to published on channel.");
         }
     }
 
@@ -112,21 +117,22 @@ class PublishNodes extends Command
     {
         foreach ($urls as $url) {
             if ($this->isSitemap($url)) {
-                $this->comment('URL is a sitemap');
                 if ($deep) {
-                    $this->comment('Getting sitemap links');
                     $this->publishLinks($this->fetchUrls(
                         new \SimpleXMLElement(file_get_contents($url))
                     ), false);
-                } else {
-                    $this->comment('Ignoring the sitemap due crawl dept');
                 }
                 continue;
             }
 
-            $this->redis->publish('nodes-channel', $url);
+            $result = $this->redis->publish('nodes-channel', $url);
+
+            if ($result) {
+                $this->count['succeeed']++;
+            } else {
+                $this->count['failed']++;
+            }
         }
-        $this->info(count($urls) . ' URL(s) published to the channel.');
     }
 
     protected function isSitemap($url)
