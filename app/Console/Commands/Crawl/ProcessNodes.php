@@ -81,10 +81,17 @@ class ProcessNodes extends Command
      */
     public function handle()
     {
-        $this->redis->subscribe(['nodes-channel'], function ($url) {
+        $count = 0;
+        while($url = $this->redis->rPop('nodes-queue')) {
             $cachePage = storage_path('caches/' . md5($url) . '.html');
             if (!file_exists($cachePage)) {
-                file_put_contents($cachePage, html_entity_decode(file_get_contents($url)));
+                try {
+                    $htmlContent = file_get_contents($url);
+                } catch (\Exception $e) {
+                    $this->error("Cannot get content of $url");
+                    continue;
+                }
+                file_put_contents($cachePage, html_entity_decode($htmlContent));
             }
             $this->dom->load($cachePage);
 
@@ -92,7 +99,10 @@ class ProcessNodes extends Command
             $content = $this->stripTags($this->cleanContent($this->dom->root));
 
             $this->saveNode($title, $content, $url);
-        });
+            $count++;
+        }
+
+        $this->info("$count url(s) processed.");
     }
 
     protected function cleanContent(Dom\AbstractNode $node)
@@ -130,7 +140,7 @@ class ProcessNodes extends Command
             'content' => $content,
             'url'     => $url
         ]);
-        $this->comment("Content of $url stored/updated in redis");
+        $this->info("Content of $url stored/updated in redis");
 
         $params = [
             'index' => 'sites',
@@ -146,9 +156,9 @@ class ProcessNodes extends Command
         try {
             $response = $this->client->index($params);
             if (!$response['created']) {
-                $this->comment("Content of $url has updated. [version: {$response['_version']}]");
+                $this->info("Content of $url has updated. [version: {$response['_version']}]");
             } else {
-                $this->comment("Content of $url indexed.");
+                $this->info("Content of $url indexed.");
             }
         } catch (ElasticsearchException $e) {
             $this->error("Cannot Index content of $url");

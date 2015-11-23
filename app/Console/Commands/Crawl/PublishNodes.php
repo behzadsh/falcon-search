@@ -22,7 +22,7 @@ class PublishNodes extends Command
      *
      * @var string
      */
-    protected $description = 'Publish seeds\' nodes on redis channel from seeds\' sitemap.';
+    protected $description = 'Publish seeds\' nodes on redis queue from seeds\' sitemap.';
 
     /**
      * @var Parser
@@ -81,13 +81,15 @@ class PublishNodes extends Command
             foreach ($sitemaps as $sitemap) {
                 $urls = array_merge($urls, $this->gatherLinks((string) $sitemap->getValue()));
             }
-            $this->publishLinks($urls);
+            $this->info(count($urls) . " sitemap(s) found in $seed");
+            $count = $this->publishLinks($urls);
+            $this->info("$count urls published on queue for $seed");
         }
 
-        $this->info("{$this->count['succeeed']} node(s) published on channel.");
+        $this->info("{$this->count['succeeed']} node(s) published on queue.");
 
         if ($this->count['failed'] > 0) {
-            $this->warn("{$this->count['failed']} node(s) failed to published on channel.");
+            $this->warn("{$this->count['failed']} node(s) failed to published on queue.");
         }
     }
 
@@ -113,26 +115,29 @@ class PublishNodes extends Command
         return $urlsList;
     }
 
-    protected function publishLinks($urls, $deep = true)
+    protected function publishLinks($urls, $count = 0, $deep = true)
     {
         foreach ($urls as $url) {
             if ($this->isSitemap($url)) {
                 if ($deep) {
-                    $this->publishLinks($this->fetchUrls(
+                    $count = $this->publishLinks($this->fetchUrls(
                         new \SimpleXMLElement(file_get_contents($url))
-                    ), false);
+                    ), $count, false);
                 }
                 continue;
             }
 
-            $result = $this->redis->publish('nodes-channel', $url);
+            $result = $this->redis->lPush('nodes-queue', $url);
 
-            if ($result) {
+            if ($result > 0) {
+                $count++;
                 $this->count['succeeed']++;
             } else {
                 $this->count['failed']++;
             }
         }
+
+        return $count;
     }
 
     protected function isSitemap($url)
