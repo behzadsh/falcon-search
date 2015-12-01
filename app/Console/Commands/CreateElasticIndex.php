@@ -15,14 +15,14 @@ class CreateElasticIndex extends Command
      *
      * @var string
      */
-    protected $signature = 'elastic:create';
+    protected $signature = 'elastic:create {--f|flush : Flush mapping an remap indexes}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Create index and mapping for storing sites';
 
     /**
      * @var Client
