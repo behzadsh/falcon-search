@@ -82,7 +82,7 @@ class ProcessNodes extends Command
     public function handle()
     {
         $count = 0;
-        while($url = $this->redis->rPop('nodes-queue')) {
+        while ($url = $this->redis->rPop('nodes-queue')) {
             $cachePage = storage_path('caches/' . md5($url) . '.html');
             if (!file_exists($cachePage)) {
                 try {
@@ -135,21 +135,19 @@ class ProcessNodes extends Command
     protected function saveNode($title, $content, $url)
     {
         $hashId = md5($url);
-        $this->database->hMSet('sites:' . $hashId, [
-            'title'   => $title,
-            'content' => $content,
-            'url'     => $url
-        ]);
-        $this->info("Content of $url stored/updated in redis");
 
         $params = [
             'index' => 'sites',
             'type'  => 'default',
             'id'    => $hashId,
             'body'  => [
-                'title'   => $title,
-                'content' => $content,
-                'hash_id' => $hashId
+                'title'    => $title,
+                'content'  => $content,
+                'hash_id'  => $hashId,
+                'original' => [
+                    'title'   => $title,
+                    'content' => $content
+                ]
             ]
         ];
 
