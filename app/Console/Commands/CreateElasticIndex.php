@@ -22,7 +22,7 @@ class CreateElasticIndex extends Command
      *
      * @var string
      */
-    protected $description = 'Create index and mapping for storing sites';
+    protected $description = 'Try to create index and mapping for storing sites';
 
     /**
      * @var Client
@@ -54,28 +54,37 @@ class CreateElasticIndex extends Command
      */
     public function handle()
     {
-        $this->info('Checking for index existance...');
-
-        try {
-            $mapping = $this->client->indices()->getMapping([
-                'index' => 'sites',
-                'type'  => 'default'
-            ]);
-
-            $this->info('Index exists. checking for mapping existance...');
-
-            if (empty($mapping)) {
-                $this->info('Add mapping to index...');
-                $this->client->indices()->putMapping($this->getMappingParams());
-                $this->info('Index mapping completed!');
-            } else {
-                $this->info('Mapping exists. Continue indexing logs...');
+        if ($this->option('flush')) {
+            $this->info('Flushing indexes...');
+            try {
+                $this->client->indices()->delete(['index' => 'sites']);
+                $this->info('Index deleted. Recreating now...');
+            } catch (Missing404Exception $e) {
+                $this->info('No index found to flush. Creating now...');
+            } finally {
+                $this->createIndex();
             }
-        } catch (Missing404Exception $e) {
-            $this->info('Index not found, createing now...');
-            $this->client->indices()->create($this->config->get('elastic'));
-            $this->client->indices()->putMapping($this->getMappingParams());
-            $this->info('Index created with settings and mappings!');
+        } else {
+            $this->info('Checking for index existance...');
+            try {
+                $mapping = $this->client->indices()->getMapping([
+                    'index' => 'sites',
+                    'type'  => 'default'
+                ]);
+
+                $this->info('Index exists. Checking for mapping existance...');
+
+                if (empty($mapping)) {
+                    $this->info('Add mapping to index...');
+                    $this->client->indices()->putMapping($this->getMappingParams());
+                    $this->info('Index mapping completed!');
+                } else {
+                    $this->info('Mapping exists. Continue indexing logs...');
+                }
+            } catch (Missing404Exception $e) {
+                $this->info('Index not found. Createing now...');
+                $this->createIndex();
+            }
         }
     }
 
@@ -89,5 +98,12 @@ class CreateElasticIndex extends Command
             'type'  => 'default',
             'body'  => $this->config->get('elastic.body.mapping.default')
         ];
+    }
+
+    protected function createIndex()
+    {
+        $this->client->indices()->create($this->config->get('elastic'));
+        $this->client->indices()->putMapping($this->getMappingParams());
+        $this->info('Index created with settings and mappings!');
     }
 }
