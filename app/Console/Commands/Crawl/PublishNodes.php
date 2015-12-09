@@ -109,7 +109,9 @@ class PublishNodes extends Command
         $urlsList = [];
 
         foreach ($sitemapObject->children() as $child) {
-            $urlsList[] = (string) $child->loc;
+            if (time() - strtotime($child->lastmod) < (365 * 24 * 60 * 60)) {
+                $urlsList[] = (string) $child->loc;
+            }
         }
 
         return $urlsList;
