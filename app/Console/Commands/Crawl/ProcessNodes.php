@@ -98,13 +98,13 @@ class ProcessNodes extends Command
         while ($limit > 0) {
             $data = json_decode($this->redis->rPop('nodes-queue'), true);
 
-            if (!isset($data['url'])) {
+            if (!isset($data['url']) || (filter_var($data['url'], FILTER_VALIDATE_URL) === FALSE)) {
                 $this->counter['failed_url']++;
                 continue;
             }
 
             $url = $data['url'];
-            $date = isset($data['date']) ? $data['date'] : null;
+            $date = (isset($data['date']) || $data['date']) ? $data['date'] : null;
 
             $cachePage = storage_path('caches/' . md5($url) . '.html');
 
@@ -131,7 +131,6 @@ class ProcessNodes extends Command
             $limit--;
         }
 
-        $this->info("Cron finished with the following results:");
         $this->printResultTable();
     }
 
@@ -218,7 +217,7 @@ class ProcessNodes extends Command
                     'title'   => $title,
                     'content' => $content,
                     'url'     => $url,
-                    'date'    => Carbon::createFromTimestamp($date)->toW3cString()
+                    'date'    => ($date) ? Carbon::createFromTimestamp($date)->toW3cString() : null
                 ]
             ]
         ];
@@ -244,6 +243,8 @@ class ProcessNodes extends Command
 
     protected function printResultTable()
     {
+        $this->info("Cron finished with the following results:");
+
         $headers = [
             'indexed urls', 'failed urls', 'failed indexed', 'updated indices',
         ];
