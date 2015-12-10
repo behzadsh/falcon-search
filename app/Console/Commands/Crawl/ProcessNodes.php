@@ -4,7 +4,9 @@ namespace FalconSearch\Console\Commands\Crawl;
 
 use Carbon\Carbon;
 use Elasticsearch\Client;
+use Elasticsearch\Common\Exceptions\ElasticsearchException;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Redis\Database;
 
 class ProcessNodes extends Command
@@ -58,18 +60,31 @@ class ProcessNodes extends Command
     protected $dom;
 
     /**
+     * @var Repository
+     */
+    protected $config;
+
+    protected $counter = [
+        'indexed'      => 0,
+        'updated'      => 0,
+        'failed_url'   => 0,
+        'failed_index' => 0
+    ];
+
+    /**
      * Create a new command instance.
      *
-     * @param Database $redis
-     * @param Client   $client
+     * @param Database   $redis
+     * @param Client     $client
+     * @param Repository $config
      */
-    public function __construct(Database $redis, Client $client)
+    public function __construct(Database $redis, Client $client, Repository $config)
     {
         parent::__construct();
         $this->redis = $redis;
-        $this->database = new \Predis\Client();
         $this->client = $client;
         $this->dom = new \DOMDocument();
+        $this->config = $config;
     }
 
     /**
@@ -79,11 +94,12 @@ class ProcessNodes extends Command
      */
     public function handle()
     {
-        $count = $limit = 10;
+        $limit = $this->config->get('settings.cron.limit');
         while ($limit > 0) {
             $data = json_decode($this->redis->rPop('nodes-queue'), true);
 
             if (!isset($data['url'])) {
+                $this->counter['failed_url']++;
                 continue;
             }
 
@@ -97,6 +113,7 @@ class ProcessNodes extends Command
                     $htmlContent = file_get_contents($url);
                 } catch (\Exception $e) {
                     $this->error("Cannot get content of $url");
+                    $this->counter['failed_url']++;
 
                     continue;
                 }
@@ -113,7 +130,9 @@ class ProcessNodes extends Command
             $this->saveNode($title, $content, $url, $date);
             $limit--;
         }
-        $this->info("$count url(s) processed.");
+
+        $this->info("Cron finished with the following results:");
+        $this->printResultTable();
     }
 
     /**
@@ -181,7 +200,7 @@ class ProcessNodes extends Command
             $cleanContent .= " " . $content->textContent;
         }
 
-        return trim(preg_replace('/\s+/', ' ', $cleanContent));
+        return utf8_encode(trim(preg_replace('/\s+/', ' ', $cleanContent)));
     }
 
     protected function saveNode($title, $content, $url, $date)
@@ -203,21 +222,42 @@ class ProcessNodes extends Command
                 ]
             ]
         ];
+
         try {
             $response = $this->client->index($params);
             if (!$response['created']) {
                 $this->info("Content of $url has updated. [version: {$response['_version']}]");
+                $this->counter['updated']++;
             } else {
                 $this->info("Content of $url indexed.");
+                $this->counter['indexed']++;
             }
         } catch (ElasticsearchException $e) {
             $this->error("Cannot Index content of $url");
-            $this->database->lpush('failed_nodes', json_encode([
+            $this->redis->lpush('failed_nodes', json_encode([
                 'error'  => $e->getMessage(),
                 'params' => $params
             ]));
-            $this->redis->lPush('failed-urls', $url);
+            $this->counter['failed_index']++;
         }
+    }
+
+    protected function printResultTable()
+    {
+        $headers = [
+            'indexed urls', 'failed urls', 'failed indexed', 'updated indices',
+        ];
+
+        $rows = [
+            [
+                $this->counter['indexed'],
+                $this->counter['failed_url'],
+                $this->counter['failed_index'],
+                $this->counter['updated']
+            ]
+        ];
+
+        $this->table($headers, $rows);
     }
 
 }
