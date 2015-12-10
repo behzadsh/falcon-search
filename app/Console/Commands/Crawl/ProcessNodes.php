@@ -3,10 +3,8 @@
 namespace FalconSearch\Console\Commands\Crawl;
 
 use Elasticsearch\Client;
-use Elasticsearch\Common\Exceptions\ElasticsearchException;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Redis\Database;
-use PHPHtmlParser\Dom;
 
 class ProcessNodes extends Command
 {
@@ -54,18 +52,18 @@ class ProcessNodes extends Command
     protected $client;
 
     /**
-     * @var Dom
+     * @var \DOMDocument
      */
     protected $dom;
 
     /**
      * Create a new command instance.
      *
-     * @param Database $redis
-     * @param Client   $client
-     * @param Dom      $dom
+     * @param Database     $redis
+     * @param Client       $client
+     * @param \DOMDocument $dom
      */
-    public function __construct(Database $redis, Client $client, Dom $dom)
+    public function __construct(Database $redis, Client $client, \DOMDocument $dom)
     {
         parent::__construct();
         $this->redis = $redis;
@@ -81,61 +79,106 @@ class ProcessNodes extends Command
      */
     public function handle()
     {
-        $count = 0;
-        while ($url = $this->redis->rPop('nodes-queue')) {
+        $count = $limit = 10;
+        while ($limit > 0) {
+            $url = $this->redis->rPop('nodes-queue');
             $cachePage = storage_path('caches/' . md5($url) . '.html');
+
             if (!file_exists($cachePage)) {
                 try {
                     $htmlContent = file_get_contents($url);
                 } catch (\Exception $e) {
                     $this->error("Cannot get content of $url");
-                    continue;
+
+                    return;
                 }
                 file_put_contents($cachePage, html_entity_decode($htmlContent));
             }
-            $this->dom->load($cachePage);
 
-            $title = $this->dom->getElementsByTag('title')[0]->text;
-            $content = $this->stripTags($this->cleanContent($this->dom->root));
+            @$this->dom->loadHTMLFile($cachePage);
+
+            $title = $this->dom->getElementsByTagName('title')->item(0)->textContent;
+            $content = $this->getContent(
+                $this->cleanContent($this->dom->getElementsByTagName('body')->item(0))
+            );
 
             $this->saveNode($title, $content, $url);
-            $count++;
+            $limit--;
         }
-
         $this->info("$count url(s) processed.");
     }
 
-    protected function cleanContent(Dom\AbstractNode $node)
+    /**
+     * @param \DOMNode $node
+     * @return \DOMNode|null
+     */
+    protected function cleanContent(\DOMNode $node)
     {
-        if ($node->hasChildren()) {
-            foreach ($node->getChildren() as &$child) {
-                if ($this->shoulIgnore($child)) {
-                    $node = $node->removeChild($child->id());
+        if ($node->hasChildNodes()) {
+            $blackList = [];
+
+            /** @var \DOMNode $child */
+            foreach ($node->childNodes as $child) {
+                if (!$child instanceof \DOMElement) {
+                    continue;
+                }
+
+                /** @var \DOMElement $child */
+                if ($this->shouldBeIgnored($child)) {
+                    array_push($blackList, $child);
                 } else {
-                    $child = $this->cleanContent($child);
+                    $newChild = $this->cleanContent($child);
+                    if (is_null($newChild)) {
+                        array_push($blackList, $child);
+                    } else {
+                        $node->replaceChild($newChild, $child);
+                    }
                 }
             }
-        } elseif (empty($node->text)) {
+
+            $node = $this->removeBlackNodes($node, $blackList);
+        } elseif (empty($node->textContent)) {
             return null;
         }
 
         return $node;
     }
 
-    protected function shoulIgnore(Dom\AbstractNode $node)
+    protected function shouldBeIgnored(\DOMElement $node)
     {
-        return in_array($node->getTag()->name(), $this->ignoringTags);
+        return in_array($node->tagName, $this->ignoringTags);
     }
 
-    protected function stripTags($content)
+    protected function removeBlackNodes(\DOMNode $node, array $blackList)
     {
-        return trim(preg_replace('/\s+/', ' ', preg_replace('/<[^>]+>/', ' ', $content)));
+        foreach ($blackList as $blackNode) {
+            $node->removeChild($blackNode);
+        }
+
+        return $node;
+    }
+
+    protected function getContent(\DOMNode $content)
+    {
+        $cleanContent = '';
+        if ($content instanceof \DOMElement && $content->hasChildNodes()) {
+            foreach ($content->childNodes as $childNode) {
+                $subContent = $this->getContent($childNode);
+
+                if (!empty($subContent)) {
+                    $cleanContent .= " " . $subContent;
+                }
+            }
+        } elseif (!empty($content->textContent)) {
+            $cleanContent .= " " . $content->textContent;
+        }
+
+        return trim(preg_replace('/\s+/', ' ', $cleanContent));
     }
 
     protected function saveNode($title, $content, $url)
     {
         $hashId = md5($url);
-
         $params = [
             'index' => 'sites',
             'type'  => 'default',
@@ -146,11 +189,11 @@ class ProcessNodes extends Command
                 'hash_id'  => $hashId,
                 'original' => [
                     'title'   => $title,
-                    'content' => $content
+                    'content' => $content,
+                    'url'     => $url
                 ]
             ]
         ];
-
         try {
             $response = $this->client->index($params);
             if (!$response['created']) {
@@ -164,6 +207,7 @@ class ProcessNodes extends Command
                 'error'  => $e->getMessage(),
                 'params' => $params
             ]));
+            $this->redis->lPush('failed-urls', $url);
         }
     }
 
