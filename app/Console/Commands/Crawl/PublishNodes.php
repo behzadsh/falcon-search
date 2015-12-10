@@ -79,7 +79,10 @@ class PublishNodes extends Command
 
             $urls = [];
             foreach ($sitemaps as $sitemap) {
-                $urls = array_merge($urls, $this->gatherLinks((string) $sitemap->getValue()));
+                $urls = array_merge(
+                    $urls,
+                    $this->gatherLinks((string) $sitemap->getValue())
+                );
             }
             $this->info(count($urls) . " sitemap(s) found in $seed");
             $count = $this->publishLinks($urls);
@@ -109,27 +112,32 @@ class PublishNodes extends Command
         $urlsList = [];
 
         foreach ($sitemapObject->children() as $child) {
-            if (time() - strtotime($child->lastmod) < (365 * 24 * 60 * 60)) {
-                $urlsList[] = (string) $child->loc;
+            $lastmod = strtotime($child->lastmod);
+            if (time() - $lastmod < (365 * 24 * 60 * 60)) {
+                $urlsList[] = [
+                    'lastmod' => $lastmod,
+                    'url'     => (string) $child->loc
+                ];
             }
         }
 
         return $urlsList;
     }
 
-    protected function publishLinks($urls, $count = 0, $deep = true)
+    protected function publishLinks($urlSet, $count = 0, $deep = true)
     {
-        foreach ($urls as $url) {
+        foreach ($urlSet as $set) {
+            $url = $set['url'];
+            $date = $set['lastmod'];
+
             if ($this->isSitemap($url)) {
                 if ($deep) {
-                    $count = $this->publishLinks($this->fetchUrls(
-                        new \SimpleXMLElement(file_get_contents($url))
-                    ), $count, false);
+                    $count += $this->publishLinks($this->gatherLinks($url), $count, false);
                 }
                 continue;
             }
 
-            $result = $this->redis->lPush('nodes-queue', $url);
+            $result = $this->redis->lPush('nodes-queue', json_encode(compact('url', 'date')));
 
             if ($result > 0) {
                 $count++;
