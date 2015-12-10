@@ -2,6 +2,7 @@
 
 namespace FalconSearch\Console\Commands\Crawl;
 
+use Carbon\Carbon;
 use Elasticsearch\Client;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Redis\Database;
@@ -59,8 +60,8 @@ class ProcessNodes extends Command
     /**
      * Create a new command instance.
      *
-     * @param Database     $redis
-     * @param Client       $client
+     * @param Database $redis
+     * @param Client   $client
      */
     public function __construct(Database $redis, Client $client)
     {
@@ -80,7 +81,15 @@ class ProcessNodes extends Command
     {
         $count = $limit = 10;
         while ($limit > 0) {
-            $url = $this->redis->rPop('nodes-queue');
+            $data = json_decode($this->redis->rPop('nodes-queue'), true);
+
+            if (!isset($data['url'])) {
+                continue;
+            }
+
+            $url = $data['url'];
+            $date = isset($data['date']) ? $data['date'] : null;
+
             $cachePage = storage_path('caches/' . md5($url) . '.html');
 
             if (!file_exists($cachePage)) {
@@ -89,7 +98,7 @@ class ProcessNodes extends Command
                 } catch (\Exception $e) {
                     $this->error("Cannot get content of $url");
 
-                    return;
+                    continue;
                 }
                 file_put_contents($cachePage, html_entity_decode($htmlContent));
             }
@@ -101,7 +110,7 @@ class ProcessNodes extends Command
                 $this->cleanContent($this->dom->getElementsByTagName('body')->item(0))
             );
 
-            $this->saveNode($title, $content, $url);
+            $this->saveNode($title, $content, $url, $date);
             $limit--;
         }
         $this->info("$count url(s) processed.");
@@ -175,7 +184,7 @@ class ProcessNodes extends Command
         return trim(preg_replace('/\s+/', ' ', $cleanContent));
     }
 
-    protected function saveNode($title, $content, $url)
+    protected function saveNode($title, $content, $url, $date)
     {
         $hashId = md5($url);
         $params = [
@@ -189,7 +198,8 @@ class ProcessNodes extends Command
                 'original' => [
                     'title'   => $title,
                     'content' => $content,
-                    'url'     => $url
+                    'url'     => $url,
+                    'date'    => Carbon::createFromTimestamp($date)->toW3cString()
                 ]
             ]
         ];
