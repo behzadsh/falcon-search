@@ -61,15 +61,14 @@ class ProcessNodes extends Command
      *
      * @param Database     $redis
      * @param Client       $client
-     * @param \DOMDocument $dom
      */
-    public function __construct(Database $redis, Client $client, \DOMDocument $dom)
+    public function __construct(Database $redis, Client $client)
     {
         parent::__construct();
         $this->redis = $redis;
         $this->database = new \Predis\Client();
         $this->client = $client;
-        $this->dom = $dom;
+        $this->dom = new \DOMDocument();
     }
 
     /**
