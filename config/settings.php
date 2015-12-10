@@ -1,7 +1,10 @@
 <?php
 
 return [
-    'cron' => [
+    'cron'    => [
         'limit' => 100
+    ],
+    'publish' => [
+        'limit' => 250000
     ]
 ];

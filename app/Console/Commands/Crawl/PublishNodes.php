@@ -3,6 +3,7 @@
 namespace FalconSearch\Console\Commands\Crawl;
 
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Redis\Database;
 use webignition\RobotsTxt\Directive\Directive;
 use webignition\RobotsTxt\File\Parser;
@@ -34,24 +35,32 @@ class PublishNodes extends Command
      */
     protected $redis;
 
+    /**
+     * @var Repository
+     */
+    protected $config;
+
     protected $dept = 0;
 
     protected $counter = [
         'failed'   => 0,
-        'succeeed' => 0
+        'succeeed' => 0,
+        'skipped'  => 0
     ];
 
     /**
      * Create a new command instance.
      *
-     * @param Parser   $parser
-     * @param Database $redis
+     * @param Parser     $parser
+     * @param Database   $redis
+     * @param Repository $config
      */
-    public function __construct(Parser $parser, Database $redis)
+    public function __construct(Parser $parser, Database $redis, Repository $config)
     {
         parent::__construct();
         $this->parser = $parser;
         $this->redis = $redis;
+        $this->config = $config;
     }
 
     /**
@@ -61,7 +70,7 @@ class PublishNodes extends Command
      */
     public function handle()
     {
-        $seeds = config('seeds');
+        $seeds = $this->config->get('seeds');
 
         foreach ($seeds as $seed) {
             try {
@@ -79,9 +88,10 @@ class PublishNodes extends Command
 
             $urls = [];
             if (empty($sitemaps)) {
-                $this->info('sitemap is empty');
+                $this->info("No sitemap found in $seed. trying to guess sitemap url...");
                 $urls = $this->gatherLinks($this->guessSitemap($seed));
             } else {
+                $this->info(count($sitemaps) . " sitemap(s) found in $seed");
                 foreach ($sitemaps as $sitemap) {
                     $urls = array_merge(
                         $urls,
@@ -90,7 +100,6 @@ class PublishNodes extends Command
                 }
             }
 
-            $this->info(count($urls) . " sitemap(s) found in $seed");
             $count = $this->publishLinks($urls);
             $this->info("$count urls published on queue for $seed");
         }
@@ -116,11 +125,13 @@ class PublishNodes extends Command
         foreach ($sitemapObject->children() as $child) {
             $lastmod = strtotime($child->lastmod);
 
-            if (time() - $lastmod < (365 * 24 * 60 * 60) || !$lastmod) {
+            if (!$lastmod || time() - $lastmod < (365 * 24 * 60 * 60)) {
                 $urlsList[] = [
                     'lastmod' => ($lastmod) ?: null,
                     'url'     => (string) $child->loc
                 ];
+            } else {
+                $this->counter['skipped']++;
             }
         }
 
@@ -130,12 +141,17 @@ class PublishNodes extends Command
     protected function publishLinks($urlSet, $count = 0, $deep = true)
     {
         foreach ($urlSet as $set) {
+            if ($count >= $this->config->get('settings.publish.limit')) {
+                $this->info("Per-node-link limit reached!");
+                break;
+            }
+
             $url = $set['url'];
             $date = $set['lastmod'];
 
             if ($this->isSitemap($url)) {
                 if ($deep) {
-                    $count += $this->publishLinks($this->gatherLinks($url), $count, false);
+                    $count = $this->publishLinks($this->gatherLinks($url), $count, false);
                 }
                 continue;
             }
@@ -169,13 +185,14 @@ class PublishNodes extends Command
     {
         $this->info("Command finished with the following results:");
 
-        $headers = ['Published URLs', 'Failed URLs', 'Total URLs'];
+        $headers = ['Published URLs', 'Failed URLs', 'Skipped URLs', 'Total URLs'];
 
         $rows = [
             [
                 $this->counter['succeeed'],
                 $this->counter['failed'],
-                $this->counter['succeeed'] + $this->counter['failed'],
+                $this->counter['skipped'],
+                $this->counter['succeeed'] + $this->counter['failed'] + $this->counter['skipped']
             ]
         ];
 
