@@ -36,7 +36,7 @@ class PublishNodes extends Command
 
     protected $dept = 0;
 
-    protected $count = [
+    protected $counter = [
         'failed'   => 0,
         'succeeed' => 0
     ];
@@ -78,22 +78,24 @@ class PublishNodes extends Command
                                      ->get();
 
             $urls = [];
-            foreach ($sitemaps as $sitemap) {
-                $urls = array_merge(
-                    $urls,
-                    $this->gatherLinks((string) $sitemap->getValue())
-                );
+            if (empty($sitemaps)) {
+                $this->info('sitemap is empty');
+                $urls = $this->gatherLinks($this->guessSitemap($seed));
+            } else {
+                foreach ($sitemaps as $sitemap) {
+                    $urls = array_merge(
+                        $urls,
+                        $this->gatherLinks((string) $sitemap->getValue())
+                    );
+                }
             }
+
             $this->info(count($urls) . " sitemap(s) found in $seed");
             $count = $this->publishLinks($urls);
             $this->info("$count urls published on queue for $seed");
         }
 
-        $this->info("{$this->count['succeeed']} node(s) published on queue.");
-
-        if ($this->count['failed'] > 0) {
-            $this->warn("{$this->count['failed']} node(s) failed to published on queue.");
-        }
+        $this->printResultTable();
     }
 
     protected function gatherLinks($sitemapUrl)
@@ -113,9 +115,10 @@ class PublishNodes extends Command
 
         foreach ($sitemapObject->children() as $child) {
             $lastmod = strtotime($child->lastmod);
-            if (time() - $lastmod < (365 * 24 * 60 * 60)) {
+
+            if (time() - $lastmod < (365 * 24 * 60 * 60) || !$lastmod) {
                 $urlsList[] = [
-                    'lastmod' => $lastmod,
+                    'lastmod' => ($lastmod) ?: null,
                     'url'     => (string) $child->loc
                 ];
             }
@@ -141,9 +144,9 @@ class PublishNodes extends Command
 
             if ($result > 0) {
                 $count++;
-                $this->count['succeeed']++;
+                $this->counter['succeeed']++;
             } else {
-                $this->count['failed']++;
+                $this->counter['failed']++;
             }
         }
 
@@ -153,6 +156,30 @@ class PublishNodes extends Command
     protected function isSitemap($url)
     {
         return ends_with($url, '.xml');
+    }
+
+    protected function guessSitemap($url)
+    {
+        $urlData = parse_url($url);
+
+        return "http://{$urlData['host']}/sitemap.xml";
+    }
+
+    protected function printResultTable()
+    {
+        $this->info("Command finished with the following results:");
+
+        $headers = ['Published URLs', 'Failed URLs', 'Total URLs'];
+
+        $rows = [
+            [
+                $this->counter['succeeed'],
+                $this->counter['failed'],
+                $this->counter['succeeed'] + $this->counter['failed'],
+            ]
+        ];
+
+        $this->table($headers, $rows);
     }
 
 }
