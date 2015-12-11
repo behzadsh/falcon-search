@@ -2,11 +2,11 @@
 
 namespace FalconSearch\Console\Commands\Crawl;
 
+use FalconSearch\Services\ParserService;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Redis\Database;
 use webignition\RobotsTxt\Directive\Directive;
-use webignition\RobotsTxt\File\Parser;
 
 class PublishNodes extends Command
 {
@@ -26,7 +26,7 @@ class PublishNodes extends Command
     protected $description = 'Publish seeds\' nodes on redis queue from seeds\' sitemap.';
 
     /**
-     * @var Parser
+     * @var ParserService
      */
     protected $parser;
 
@@ -51,11 +51,11 @@ class PublishNodes extends Command
     /**
      * Create a new command instance.
      *
-     * @param Parser     $parser
-     * @param Database   $redis
-     * @param Repository $config
+     * @param ParserService $parser
+     * @param Database      $redis
+     * @param Repository    $config
      */
-    public function __construct(Parser $parser, Database $redis, Repository $config)
+    public function __construct(ParserService $parser, Database $redis, Repository $config)
     {
         parent::__construct();
         $this->parser = $parser;
@@ -81,10 +81,7 @@ class PublishNodes extends Command
             }
 
             /** @var Directive[] $sitemaps */
-            $sitemaps = $this->parser->getFile()
-                                     ->directiveList()
-                                     ->filter(['field' => 'sitemap'])
-                                     ->get();
+            $sitemaps = $this->parser->getSitemaps();
 
             $urls = [];
             if (empty($sitemaps)) {
