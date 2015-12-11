@@ -228,7 +228,6 @@ class ProcessNodes extends Command
                 $this->info("Content of $url has updated. [version: {$response['_version']}]");
                 $this->counter['updated']++;
             } else {
-                $this->info("Content of $url indexed.");
                 $this->counter['indexed']++;
             }
         } catch (ElasticsearchException $e) {
