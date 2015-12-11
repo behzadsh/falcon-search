@@ -2,9 +2,9 @@
 
 return [
     'cron'    => [
-        'limit' => 100
+        'limit' => 1000
     ],
     'publish' => [
-        'limit' => 250000
+        'limit' => 100000
     ]
 ];
