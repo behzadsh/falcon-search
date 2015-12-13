@@ -5,6 +5,6 @@ return [
         'limit' => 1000
     ],
     'publish' => [
-        'limit' => 100000
+        'limit' => 250000
     ]
 ];
