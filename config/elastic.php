@@ -48,13 +48,13 @@ return [
                         'analyzer' => 'persian_arabic_analyzer'
                     ],
                     'hash_id'  => ['type' => 'string', 'index' => 'not_analyzed'],
+                    'date'     => ['type' => 'date', 'format' => 'date_time_no_millis'],
                     'original' => [
                         'type'       => 'object',
                         'properties' => [
-                            'title'   => ['type' => 'string', 'index' => 'not_analyzed'],
-                            'content' => ['type' => 'string', 'index' => 'not_analyzed'],
-                            'url'     => ['type' => 'string', 'index' => 'not_analyzed'],
-                            'date'    => ['type' => 'date', 'format' => 'date_time_no_millis']
+                            'title'   => ['type' => 'string', 'index' => 'no'],
+                            'content' => ['type' => 'string', 'index' => 'no'],
+                            'url'     => ['type' => 'string', 'index' => 'no']
                         ]
                     ]
                 ]
