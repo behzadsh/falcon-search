@@ -124,7 +124,7 @@ class ProcessNodes extends Command
 
             $title = $this->dom->getElementsByTagName('title')->item(0)->textContent;
             $content = $this->getContent(
-                $this->cleanContent($this->dom->getElementsByTagName('body')->item(0))
+                $this->pruneContent($this->dom->getElementsByTagName('body')->item(0))
             );
 
             $this->saveNode($title, $content, $url, $date);
@@ -138,7 +138,7 @@ class ProcessNodes extends Command
      * @param \DOMNode $node
      * @return \DOMNode|null
      */
-    protected function cleanContent(\DOMNode $node)
+    protected function pruneContent(\DOMNode $node)
     {
         if ($node->hasChildNodes()) {
             $blackList = [];
@@ -153,7 +153,7 @@ class ProcessNodes extends Command
                 if ($this->shouldBeIgnored($child)) {
                     array_push($blackList, $child);
                 } else {
-                    $newChild = $this->cleanContent($child);
+                    $newChild = $this->pruneContent($child);
                     if (is_null($newChild)) {
                         array_push($blackList, $child);
                     } else {
@@ -199,11 +199,13 @@ class ProcessNodes extends Command
             $cleanContent .= " " . $content->textContent;
         }
 
-        return utf8_encode(trim(preg_replace('/\s+/', ' ', $cleanContent)));
+        return trim(preg_replace('/\s+/', ' ', $cleanContent));
     }
 
     protected function saveNode($title, $content, $url, $date)
     {
+        $content = $this->cleanContent($content);
+
         $hashId = md5($url);
         $params = [
             'index' => 'sites',
@@ -258,6 +260,11 @@ class ProcessNodes extends Command
         ];
 
         $this->table($headers, $rows);
+    }
+
+    protected function cleanContent($content)
+    {
+        return preg_replace('/[\x00-\x1F\x80-\xFF]/', '', utf8_encode($content));
     }
 
 }
