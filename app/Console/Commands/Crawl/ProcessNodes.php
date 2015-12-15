@@ -234,7 +234,7 @@ class ProcessNodes extends Command
             $this->error("Cannot Index content of $url");
             $this->redis->lpush('failed_nodes', json_encode([
                 'error'  => $e->getMessage(),
-                'params' => $params
+                'params' => $url
             ]));
             $this->counter['failed_index']++;
         }
