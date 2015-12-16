@@ -99,7 +99,7 @@ class ProcessNodes extends Command
         while ($limit > 0) {
             $data = json_decode($this->redis->rPop('nodes-queue'), true);
 
-            if (!isset($data['url']) || (filter_var($data['url'], FILTER_VALIDATE_URL) === FALSE)) {
+            if (!isset($data['url']) || (filter_var($data['url'], FILTER_VALIDATE_URL) === false)) {
                 $this->counter['failed_url']++;
                 continue;
             }
@@ -113,7 +113,7 @@ class ProcessNodes extends Command
                 try {
                     $htmlContent = file_get_contents($url);
                 } catch (\Exception $e) {
-                    $this->error("Cannot get content of $url");
+                    $this->error("# Cannot get content of $url. [{$e->getMessage()}]");
                     $this->counter['failed_url']++;
 
                     continue;
@@ -217,7 +217,8 @@ class ProcessNodes extends Command
 
         if (is_null($content)) {
             $this->counter['empty_url']++;
-            return;
+
+            return false;
         }
 
         $hashId = md5($url);
@@ -246,21 +247,25 @@ class ProcessNodes extends Command
                 $this->counter['indexed']++;
             }
         } catch (ElasticsearchException $e) {
-            $this->error("Cannot Index content of $url");
-            $this->redis->lpush('failed-nodes', json_encode([
+            $this->error("# Cannot Index content of $url. Check \"failed:$url\" key in redis for more information");
+            $this->redis->hMSet("failed:$url", [
                 'error'  => $e->getMessage(),
                 'params' => $url
-            ]));
+            ]);
             $this->counter['failed_index']++;
         }
     }
 
     protected function printResultTable()
     {
-        $this->info("Cron finished with the following results:");
+        $this->info("* Cron finished with the following results:");
 
         $headers = [
-            'indexed urls', 'failed urls', 'no content urls', 'failed indexed', 'updated indices'
+            'indexed urls',
+            'failed urls',
+            'no content urls',
+            'failed indexed',
+            'updated indices'
         ];
 
         $rows = [

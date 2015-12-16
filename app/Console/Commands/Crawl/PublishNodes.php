@@ -76,7 +76,7 @@ class PublishNodes extends Command
             try {
                 $this->parser->setSource(file_get_contents($seed));
             } catch (\Exception $e) {
-                $this->warn("Error reading '$seed'. File may not exists.");
+                $this->error("# Error reading '$seed'. File may not exists.");
                 continue;
             }
 
@@ -85,10 +85,10 @@ class PublishNodes extends Command
 
             $urls = [];
             if (empty($sitemaps)) {
-                $this->info("No sitemap found in $seed. trying to guess sitemap url...");
+                $this->info("* No sitemap found in $seed. trying to guess sitemap url...");
                 $urls = $this->gatherLinks($this->guessSitemap($seed));
             } else {
-                $this->info(count($sitemaps) . " sitemap(s) found in $seed");
+                $this->info("* " . count($sitemaps) . " sitemap(s) found in $seed");
                 foreach ($sitemaps as $sitemap) {
                     $urls = array_merge(
                         $urls,
@@ -98,7 +98,7 @@ class PublishNodes extends Command
             }
 
             $count = $this->publishLinks($urls);
-            $this->info("$count urls published on queue for $seed");
+            $this->info("* $count urls published on queue for $seed");
         }
 
         $this->printResultTable();
@@ -139,7 +139,7 @@ class PublishNodes extends Command
     {
         foreach ($urlSet as $set) {
             if ($count >= $this->config->get('settings.publish.limit')) {
-                $this->info("Per-node-link limit reached!");
+                $this->info("* Per-node-link limit reached!");
                 break;
             }
 
@@ -180,7 +180,7 @@ class PublishNodes extends Command
 
     protected function printResultTable()
     {
-        $this->info("Command finished with the following results:");
+        $this->info("* Command finished with the following results:");
 
         $headers = ['Published URLs', 'Failed URLs', 'Skipped URLs', 'Total URLs'];
 
