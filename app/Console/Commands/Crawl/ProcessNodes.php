@@ -67,6 +67,7 @@ class ProcessNodes extends Command
     protected $counter = [
         'indexed'      => 0,
         'updated'      => 0,
+        'empty_url'    => 0,
         'failed_url'   => 0,
         'failed_index' => 0
     ];
@@ -138,8 +139,12 @@ class ProcessNodes extends Command
      * @param \DOMNode $node
      * @return \DOMNode|null
      */
-    protected function pruneContent(\DOMNode $node)
+    protected function pruneContent($node)
     {
+        if (is_null($node)) {
+            return null;
+        }
+
         if ($node->hasChildNodes()) {
             $blackList = [];
 
@@ -184,7 +189,11 @@ class ProcessNodes extends Command
         return $node;
     }
 
-    protected function getContent(\DOMNode $content)
+    /**
+     * @param \DOMNode $content
+     * @return string
+     */
+    protected function getContent($content)
     {
         $cleanContent = '';
         if ($content instanceof \DOMElement && $content->hasChildNodes()) {
@@ -205,6 +214,11 @@ class ProcessNodes extends Command
     protected function saveNode($title, $content, $url, $date)
     {
         $content = $this->cleanContent($content);
+
+        if (is_null($content)) {
+            $this->counter['empty_url']++;
+            return;
+        }
 
         $hashId = md5($url);
         $params = [
@@ -227,14 +241,13 @@ class ProcessNodes extends Command
         try {
             $response = $this->client->index($params);
             if (!$response['created']) {
-                $this->info("Content of $url has updated. [version: {$response['_version']}]");
                 $this->counter['updated']++;
             } else {
                 $this->counter['indexed']++;
             }
         } catch (ElasticsearchException $e) {
             $this->error("Cannot Index content of $url");
-            $this->redis->lpush('failed_nodes', json_encode([
+            $this->redis->lpush('failed-nodes', json_encode([
                 'error'  => $e->getMessage(),
                 'params' => $url
             ]));
@@ -247,13 +260,14 @@ class ProcessNodes extends Command
         $this->info("Cron finished with the following results:");
 
         $headers = [
-            'indexed urls', 'failed urls', 'failed indexed', 'updated indices',
+            'indexed urls', 'failed urls', 'no content urls', 'failed indexed', 'updated indices'
         ];
 
         $rows = [
             [
                 $this->counter['indexed'],
                 $this->counter['failed_url'],
+                $this->counter['empty_url'],
                 $this->counter['failed_index'],
                 $this->counter['updated']
             ]
