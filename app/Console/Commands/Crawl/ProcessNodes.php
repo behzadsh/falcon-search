@@ -72,6 +72,11 @@ class ProcessNodes extends Command
         'failed_index' => 0
     ];
 
+    protected $time = [
+        'start' => null,
+        'end'   => null
+    ];
+
     /**
      * Create a new command instance.
      *
@@ -95,6 +100,7 @@ class ProcessNodes extends Command
      */
     public function handle()
     {
+        $this->time['start'] = Carbon::createFromTimestamp(time())->toDateTimeString();
         $limit = $this->config->get('settings.cron.limit');
         while ($limit > 0) {
             $data = json_decode($this->redis->rPop('nodes-queue'), true);
@@ -258,7 +264,8 @@ class ProcessNodes extends Command
 
     protected function printResultTable()
     {
-        $this->info("* Cron finished with the following results:");
+        $this->time['end'] = Carbon::createFromTimestamp(time())->toDateTimeString();
+        $this->info("* Cron start at {$this->time['start']} and finished at {$this->time['end']} with the following results:");
 
         $headers = [
             'indexed urls',
