@@ -129,7 +129,13 @@ class ProcessNodes extends Command
 
             @$this->dom->loadHTMLFile($cachePage);
 
-            $title = $this->dom->getElementsByTagName('title')->item(0)->textContent;
+            $title = $this->getTitle();
+
+            if (is_null($title)) {
+                $this->counter['failed_url']++;
+                continue;
+            }
+
             $content = $this->getContent(
                 $this->pruneContent($this->dom->getElementsByTagName('body')->item(0))
             );
@@ -139,6 +145,18 @@ class ProcessNodes extends Command
         }
 
         $this->printResultTable();
+    }
+
+    /**
+     * @return string
+     */
+    protected function getTitle()
+    {
+        if ($titleElement = $this->dom->getElementsByTagName('title')) {
+            $title = $titleElement->item(0)->textContent;
+        }
+
+        return ($title) ?: null;
     }
 
     /**
