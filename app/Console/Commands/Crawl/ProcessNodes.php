@@ -104,6 +104,7 @@ class ProcessNodes extends Command
         $limit = $this->config->get('settings.cron.limit');
         while ($limit > 0) {
             $data = json_decode($this->redis->rPop('nodes-queue'), true);
+            $limit--;
 
             if (!isset($data['url']) || (filter_var($data['url'], FILTER_VALIDATE_URL) === false)) {
                 $this->counter['failed_url']++;
@@ -141,7 +142,6 @@ class ProcessNodes extends Command
             );
 
             $this->saveNode($title, $content, $url, $date);
-            $limit--;
         }
 
         $this->printResultTable();
