@@ -17,7 +17,7 @@ class ProcessNodes extends Command
      *
      * @var string
      */
-    protected $signature = 'crawl:process-nodes';
+    protected $signature = 'crawl:process-nodes {--d|debug : Desplaying debuging info and errors}';
 
     /**
      * The console command description.
@@ -152,11 +152,11 @@ class ProcessNodes extends Command
      */
     protected function getTitle()
     {
-        if ($titleElement = $this->dom->getElementsByTagName('title')) {
-            $title = $titleElement->item(0)->textContent;
+        try {
+            return $this->dom->getElementsByTagName('title')->item(0)->textContent;
+        } catch (\Exception $e) {
+            return null;
         }
-
-        return ($title) ?: null;
     }
 
     /**
@@ -309,6 +309,13 @@ class ProcessNodes extends Command
     protected function cleanContent($content)
     {
         return preg_replace('/[\x00-\x1F\x80-\xFF]/', '', utf8_encode($content));
+    }
+
+    public function error($string)
+    {
+        if ($this->option('debug')) {
+            parent::error($string);
+        }
     }
 
 }
