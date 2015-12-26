@@ -108,6 +108,7 @@ class ProcessNodes extends Command
 
             if (!isset($data['url']) || (filter_var($data['url'], FILTER_VALIDATE_URL) === false)) {
                 $this->counter['failed_url']++;
+                \Log::debug('Invalid url', $data['url']);
                 continue;
             }
 
@@ -133,7 +134,8 @@ class ProcessNodes extends Command
             $title = $this->getTitle();
 
             if (is_null($title)) {
-                $this->counter['failed_url']++;
+                $this->counter['empty_url']++;
+                \Log::debug('Empty content', $data['url']);
                 continue;
             }
 
@@ -315,6 +317,8 @@ class ProcessNodes extends Command
     {
         if ($this->option('debug')) {
             parent::error($string);
+        } else {
+            \Log::debug('Invalid url', ['error' => $string]);
         }
     }
 
