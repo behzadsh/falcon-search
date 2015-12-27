@@ -2,9 +2,9 @@
 
 return [
     'cron'    => [
-        'limit' => 1000
+        'limit' => env('CRON_LIMIT', 2000)
     ],
     'publish' => [
-        'limit' => 250000
+        'limit' => env('PUBLISH_LIMIT', 250000)
     ]
 ];
