@@ -7,32 +7,6 @@ return [
         'settings' => [
             'number_of_shards'   => 10,
             'number_of_replicas' => 0,
-            'analysis'           => [
-                'char_filter' => [
-                    'persian_arabic_chars' => [
-                        'type'     => 'mapping',
-                        'mappings' => [
-                            'ك=>ک',
-                            'ي=>ی',
-                            'ؤ=>و',
-                            'ئ=>ی',
-                            'أ=>ا',
-                            'ِ=>',
-                            'ُ=>',
-                            'َ=>',
-                            'آ=>ا',
-                            '‌=> '
-                        ]
-                    ]
-                ],
-                'analyzer'    => [
-                    'persian_arabic_analyzer' => [
-                        'type'        => 'custom',
-                        'tokenizer'   => 'standard',
-                        'char_filter' => ['persian_arabic_chars']
-                    ]
-                ]
-            ]
         ],
         'mapping'  => [
             'default' => [
@@ -40,12 +14,12 @@ return [
                     'title'    => [
                         'type'     => 'string',
                         'index'    => 'analyzed',
-                        'analyzer' => 'persian_arabic_analyzer'
+                        'analyzer' => 'english'
                     ],
                     'content'  => [
                         'type'     => 'string',
                         'index'    => 'analyzed',
-                        'analyzer' => 'persian_arabic_analyzer'
+                        'analyzer' => 'english'
                     ],
                     'hash_id'  => ['type' => 'string', 'index' => 'not_analyzed'],
                     'date'     => ['type' => 'date', 'format' => 'date_time_no_millis'],
