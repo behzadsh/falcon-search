@@ -108,7 +108,7 @@ class ProcessNodes extends Command
 
             if (!isset($data['url']) || (filter_var($data['url'], FILTER_VALIDATE_URL) === false)) {
                 $this->counter['failed_url']++;
-                \Log::debug('Invalid url', $data);
+                $this->logDebugInfo('Invalid url', $data);
                 continue;
             }
 
@@ -135,7 +135,8 @@ class ProcessNodes extends Command
 
             if (is_null($title)) {
                 $this->counter['empty_url']++;
-                \Log::debug('Empty content', $data);
+                //\Log::debug('Empty content', $data);
+                $this->logDebugInfo('Empty content', $data);
                 continue;
             }
 
@@ -147,6 +148,15 @@ class ProcessNodes extends Command
         }
 
         $this->printResultTable();
+    }
+
+    public function error($string)
+    {
+        if ($this->option('debug')) {
+            parent::error($string);
+        } else {
+            $this->logDebugInfo('Error', $string);
+        }
     }
 
     /**
@@ -280,6 +290,8 @@ class ProcessNodes extends Command
             ]);
             $this->counter['failed_index']++;
         }
+
+        return true;
     }
 
     protected function printResultTable()
@@ -313,13 +325,15 @@ class ProcessNodes extends Command
         return preg_replace('/[\x00-\x1F\x80-\xFF]/', '', utf8_encode($content));
     }
 
-    public function error($string)
+    protected function logDebugInfo($message, $data = null)
     {
-        if ($this->option('debug')) {
-            parent::error($string);
-        } else {
-            \Log::debug('Invalid url', ['error' => $string]);
+        if (is_null($data)) {
+            $data = [];
+        } elseif (!is_array($data)) {
+            $data = ['error' => $data];
         }
+
+        \Log::debug($message, $data);
     }
 
 }
