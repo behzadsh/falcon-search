@@ -41,6 +41,7 @@ class SearchService
     {
         $this->page = $page;
         $this->processQuery($query);
+
         return $this->runQuery();
     }
 
@@ -76,12 +77,25 @@ class SearchService
     {
         $params = [
             'index' => 'sites',
-            'type' => 'default',
-            'size' => self::SIZE,
-            'from' => ($this->page - 1) * self::SIZE,
-            'body' => [
-                'query' => [
+            'type'  => 'default',
+            'size'  => self::SIZE,
+            'from'  => ($this->page - 1) * self::SIZE,
+            'body'  => [
+                'query'     => [
                     'filtered' => $this->buildQuery()
+                ],
+                'highlight' => [
+                    'order'     => 'score',
+                    'fields'    => [
+                        'content' => [
+                            'fragment_size'       => 150,
+                            'number_of_fragments' => 3
+                        ],
+                        'title' => [
+                            'pre_tags'  => ['<em>'],
+                            'post_tags' => ['</em>']
+                        ]
+                    ]
                 ]
             ]
         ];
@@ -231,6 +245,7 @@ class SearchService
     protected function pruneResponse($search)
     {
         unset($search['_shards']);
+
         return $search;
     }
 
