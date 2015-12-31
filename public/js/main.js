@@ -11,7 +11,7 @@
         // This function is anonymous, is executed immediately and
         // the return value is assigned to QueryString!
         var query_string = {};
-        var query = window.location.search.substring(1);
+        var query = window.location.search.substring(1).replace(/\+/g, "%20");
         var vars = query.split("&");
         for (var i = 0; i < vars.length; i++) {
             var pair = vars[i].split("=");
@@ -72,10 +72,6 @@
         if (typeof value == 'string') value = value.replace(/%26/g, "&").replace(/%2B/g, "+")
         value = encodeURIComponent(value);
         return value.replace(/%20/g, "+");
-    }
-
-    function decodeQueryString(queryString) {
-        return decodeURIComponent(queryString.replace(/\+/g, "%20"));
     }
 
     // ------------------
@@ -162,7 +158,9 @@
                 removePagination(paginationContainer);
             }
         } else {
-            resultHtml = '<p>Your search - <b>' + params.q + '</b> - did not match any documents.</p>';
+            resultHtml = '<p>Your search - <b>'
+                + params.q.replace(/%2B/g, "+").replace(/%26/g, "&")
+                + '</b> - did not match any documents.</p>';
             removePagination(paginationContainer);
         }
 
@@ -227,7 +225,7 @@
 
         if (searchQuery.length == 0) return false;
 
-        searchedString = searchQuery = searchQuery.replace("&", "%26").replace("+", "%2B");
+        searchedString = searchQuery = searchQuery.replace(/&/g, "%26").replace(/\+/g, "%2B");
 
         if (previousXHRRequest) previousXHRRequest.abort(); // cancel previous XHR request in progress
         sendRequestByParams({
@@ -280,7 +278,7 @@
     //   check the url params in initialization of page
     // ---------------------------------------------------
     if (Object.keys(QueryString()).length > 0 && Object.keys(QueryString())[0].length > 0) {
-        if (QueryString().q) document.getElementById("searchQuery").value = decodeQueryString(QueryString().q);
+        if (QueryString().q) document.getElementById("searchQuery").value = QueryString().q;
         sendRequestByParams(QueryString());
     }
 
