@@ -104,6 +104,12 @@ class ProcessNodes extends Command
         $limit = $this->config->get('settings.cron.limit');
         while ($limit > 0) {
             $data = json_decode($this->redis->rPop('nodes-queue'), true);
+
+            if (is_null($data)) {
+                $this->info("There is no more node in redis queue to process");
+                break;
+            }
+
             $limit--;
 
             if (!isset($data['url']) || (filter_var($data['url'], FILTER_VALIDATE_URL) === false)) {
