@@ -1,0 +1,257 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.displayTableView {
+    display: table;
+}
+
+.middleTableViewCell {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.hidden {
+    display: none !important
+}
+
+.center {
+    text-align: center;
+}
+
+.logo {
+    padding-bottom: 30px !important;
+}
+
+.logo img {
+    width: 270px;
+}
+
+.logoMini {
+    width: 120px;
+    padding: 0;
+    position: absolute;
+    height: 60px;
+}
+
+.logoMini img {
+    height: 25px;
+    padding: 16px 18px 19px 20px;
+}
+
+.mainContainer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+/************
+    header
+************/
+
+.header {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 50px;
+    background: #F1F1F1;
+    border-bottom: 1px solid #CCC;
+}
+
+/***************
+    search box
+***************/
+
+.searchBoxContainer {
+    position: absolute;
+    display: table-cell;
+    left: 50%;
+    top: 35%;
+    transform: translate(-50%, -50%);
+}
+
+.searchBoxContainerWithResults {
+    background-color: #F1f1f1;
+    border-bottom: 1px solid #666;
+    border-color: #e5e5e5;
+    height: 59px;
+}
+
+.searchBox {
+    width: 575px;
+    height: 200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    max-width: 100%;
+}
+
+.input-group {
+    height: 40px;
+    width: 100%;
+    display: inline-table;
+}
+
+.input-group input {
+    display: table-cell;
+    width: 100%;
+    height: 40px;
+    font-size: 18px;
+    outline: 0;
+    border: 1px solid #eeeeee;
+    padding: 0 5px;
+}
+
+.togglePosition input {
+    border: 1px solid #dddddd;
+}
+
+.input-group .add-on * {
+    max-height: 20px;
+}
+
+.input-group .add-on {
+    display: table-cell;
+    background: #F1F1F1;
+    border: 1px solid #CCC;
+    text-align: center;
+    width: auto;
+    margin: 0;
+    padding: 0;
+}
+
+.form-group {
+    padding-bottom: 12px;
+}
+
+.button {
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#f5f5f5), to(#f1f1f1));
+    background-image: -webkit-linear-gradient(top, #f5f5f5, #f1f1f1);
+    -webkit-border-radius: 2px;
+    -webkit-user-select: none;
+    background-color: #f2f2f2;
+    border: 1px solid #f2f2f2;
+    border-radius: 2px;
+    color: #757575;
+    cursor: default;
+    font-family: arial, sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+    margin: 11px 4px;
+    min-width: 54px;
+    text-align: center;
+    padding: 10px 30px;
+}
+
+.searchBox.togglePosition {
+    position: relative;
+    padding-top: 8px;
+    padding-left: 0;
+    margin: 0 0 0 120px;
+    height: 40px;
+}
+
+.searchBox.togglePosition .toggleDisappear {
+    display: none;
+}
+
+.resultInfo {
+    width: 512px;
+    max-width: 100%;
+    padding-top: 10px;
+    margin-left: 120px;
+}
+
+.resultInfo span {
+    font-size: 13px;
+    font-style: oblique;
+    color: #969696;
+}
+
+.resultList {
+    width: 512px;
+    max-width: 100%;
+    padding-top: 20px;
+    margin-left: 120px;
+}
+
+.resultItemBox {
+    padding-bottom: 15px;
+}
+
+.resultItemBox a {
+    text-decoration: none !important;
+}
+
+.resultItemBox h2 {
+    font-size: 18px;
+    font-weight: normal;
+    margin: 0;
+    line-height: 20px;
+}
+
+.resultItemBox cite {
+    font-size: 14px;
+    font-weight: normal;
+    margin: 0;
+    line-height: 18px;
+}
+
+.resultItemBox p {
+    font-size: 12px;
+    font-weight: normal;
+    margin: 0;
+    line-height: 18px;
+}
+
+.resultItemBox p em, .resultItemBox h2 em {
+    font-weight: bold;
+    font-style: normal;
+}
+
+.a, cite, cite a:link, cite a:visited, .cite, .cite:link, #_bGc > i, .bc a:link {
+    color: #006621;
+    font-style: normal;
+}
+
+/*****************
+    pagination
+*****************/
+ul.pagination {
+    text-align: center;
+    list-style: none;
+    width: 512px;
+    padding-top: 25px;
+    padding-bottom: 10px;
+    margin-left: 120px;
+    border-top: 1px solid #F1f1f1;
+}
+
+ul.pagination li a {
+    padding: 5px;
+    margin: 2px;
+    text-decoration: none;
+    color: #4285f4;
+    cursor: pointer;
+}
+
+ul.pagination li {
+    display: inline-block;
+    font-size: 14px;
+}
+
+ul.pagination li a.active {
+    color: #000;
+}
+
+@media (max-width: 500px) {
+    .searchBox {
+        width: 300px;
+    }
+
+    .resultList {
+        width: 300px;
+    }
+}
