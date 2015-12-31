@@ -47,7 +47,7 @@ class SearchService
 
     protected function processQuery($query)
     {
-        $pattern = "/\"[^\"]*\"|[\S]+/";
+        $pattern = "/\"[^\"]*\"|\+\"[^\"]*\"|-\"[^\"]*\"|[\S]+/";
         preg_match_all($pattern, $query, $matches);
         $matches = $matches[0];
 
