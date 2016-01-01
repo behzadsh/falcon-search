@@ -328,7 +328,7 @@ class ProcessNodes extends Command
 
     protected function cleanContent($content)
     {
-        return preg_replace('/[\x00-\x1F\x80-\xFF]/', '', utf8_encode($content));
+        return strip_tags(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', utf8_encode($content)));
     }
 
     protected function logDebugInfo($message, $data = null)
