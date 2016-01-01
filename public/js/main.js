@@ -87,7 +87,7 @@
         Object.keys(resultBoxObj).forEach(function (key) {
             if (typeof(resultBoxObj[key]) == 'object' && resultBoxObj[key] !== null) {
                 resultBoxObj[key] = resultBoxObj[key].join(' ..... ')
-                if (key != 'title') resultBoxObj[key] += ' .....'
+                if (key != 'title') resultBoxObj[key] += '.....'
             } else if (resultBoxObj[key] != undefined) {
                 resultBoxObj[key] = resultBoxObj[key].replace("'", "\'");
             }
@@ -117,6 +117,7 @@
 
             if (end > lastPage) {
                 start = start - (end - lastPage);
+                if (start <= 0) start = 1;
                 end = lastPage;
             }
 

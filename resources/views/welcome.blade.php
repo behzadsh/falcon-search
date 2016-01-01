@@ -9,7 +9,7 @@
 <div class="mainContainer displayTableView">
     <div class="searchBoxContainer">
         <div class="logoMini hidden">
-            <img src="image/logo.png" alt="">
+            <a href="/"><img src="image/logo.png" alt=""></a>
         </div>
         <div class="searchBox">
             <div class="center form-group logo">
