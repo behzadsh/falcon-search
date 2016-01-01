@@ -205,6 +205,10 @@ body {
     line-height: 18px;
 }
 
+.resultItemBox p span {
+    color: #969696;
+}
+
 .resultItemBox p em, .resultItemBox h2 em {
     font-weight: bold;
     font-style: normal;
