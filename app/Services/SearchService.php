@@ -248,11 +248,11 @@ class SearchService
     {
         unset($search['_shards']);
 
-        foreach ($search['hits']['hits'] as $hit) {
+        foreach ($search['hits']['hits'] as $key => $hit) {
             $date = $hit['_source']['date'];
             if (!is_null($date)) {
                 $newDate = Carbon::createFromFormat('Y-m-d\TG:i:sP', $date);
-                $hit['_source']['date'] = $newDate->format('M j, Y');
+                $search['hits']['hits'][$key]['_source']['date'] = $newDate->format('M j, Y');
             }
         }
 
