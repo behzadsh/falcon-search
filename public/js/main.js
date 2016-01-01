@@ -103,7 +103,44 @@
             + '</div>';
     }
 
-    function returnHtmlForPaginationElementByNumber(num) {
+    function generatePagination(response, paginationContainer, page) {
+        var lastPage = Math.ceil(response.hits.total / 10);
+        if (!page) page = 1;
+
+        var paginationHtml = "";
+        if (lastPage > 1) {
+            var start = page - 5;
+            if (start <= 0) start = 1;
+
+            var end = page + 4;
+            if (end < 10) end = 10;
+
+            if (end > lastPage) {
+                start = start - (end - lastPage);
+                end = lastPage;
+            }
+
+            if (page != 1) {
+                paginationHtml += createPaginationLeftAnchor(page - 1);
+            }
+
+            for (var i = start; i <= end; i++) {
+                paginationHtml += createHtmlForPaginationElementByNumber(i);
+            }
+
+            if (page != lastPage) {
+                paginationHtml += createPaginationRightAnchor(page + 1);
+            }
+
+            if (paginationContainer) {
+                paginationContainer.innerHTML = paginationHtml;
+            }
+        } else {
+            removePagination(paginationContainer);
+        }
+    }
+
+    function createHtmlForPaginationElementByNumber(num) {
         var url = UpdateQueryString("page", num);
         var active = false;
         if (QueryString().page) {
@@ -115,6 +152,16 @@
         }
 
         return '<li><a class="' + (active ? "active" : "") + '" onclick="paginate(event, ' + num + ')" href="' + url + '">' + num + '</a></li>';
+    }
+
+    function createPaginationLeftAnchor(num) {
+        var url = UpdateQueryString("page", num);
+        return '<li><a class="nav-anchor" onclick="paginate(event, ' + num + ')" href="' + url + '">‹</a></li>';
+    }
+
+    function createPaginationRightAnchor(num) {
+        var url = UpdateQueryString("page", num);
+        return '<li><a class="nav-anchor" onclick="paginate(event, ' + num + ')" href="' + url + '">›</a></li>';
     }
 
     function renderResponse(response, params) {
@@ -144,19 +191,7 @@
                     + ' miliseconds' + '</span>';
             }
 
-            var lastPage = Math.ceil(response.hits.total / 10);
-            var paginationHtml = "";
-            if (lastPage > 1) {
-                for (var i = 0; i < lastPage; i++) {
-                    paginationHtml += returnHtmlForPaginationElementByNumber(i + 1);
-                }
-
-                if (paginationContainer) {
-                    paginationContainer.innerHTML = paginationHtml;
-                }
-            } else {
-                removePagination(paginationContainer);
-            }
+            generatePagination(response, paginationContainer, parseInt(params.page));
         } else {
             resultHtml = '<p>Your search - <b>'
                 + params.q.replace(/%2B/g, "+").replace(/%26/g, "&")

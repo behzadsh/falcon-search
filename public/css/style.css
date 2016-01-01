@@ -75,8 +75,7 @@ body {
 
 .searchBoxContainerWithResults {
     background-color: #F1f1f1;
-    border-bottom: 1px solid #666;
-    border-color: #e5e5e5;
+    border-bottom: 1px solid #e5e5e5;
     height: 59px;
 }
 
@@ -223,8 +222,7 @@ ul.pagination {
     text-align: center;
     list-style: none;
     width: 512px;
-    padding-top: 25px;
-    padding-bottom: 10px;
+    padding: 25px 0 10px;
     margin-left: 120px;
     border-top: 1px solid #F1f1f1;
 }
@@ -244,6 +242,11 @@ ul.pagination li {
 
 ul.pagination li a.active {
     color: #000;
+}
+
+ul.pagination li a.nav-anchor {
+    font-size: 22px;
+    font-family: monospace;
 }
 
 @media (max-width: 500px) {
