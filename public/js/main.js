@@ -211,6 +211,7 @@
     //      prepare view for render result list
     // --------------------------------------------
     function prepareToRenderResult() {
+        clearResultArea()
 
         var miniLogo = document.getElementsByClassName('logoMini')[0];
         miniLogo.className = "logoMini"
@@ -248,6 +249,23 @@
             var resultListContainer = document.createElement("ul");
             resultListContainer.className = "pagination";
             document.getElementsByClassName("mainContainer")[0].appendChild(resultListContainer);
+        }
+    }
+
+    function clearResultArea() {
+        var resultInfo = document.getElementsByClassName("resultInfo")[0];
+        if (resultInfo) {
+            resultInfo.parentNode.removeChild(resultInfo);
+        }
+
+        var resultList = document.getElementsByClassName("resultList")[0];
+        if (resultList) {
+            resultList.parentNode.removeChild(resultList);
+        }
+
+        var resultList = document.getElementsByClassName("pagination")[0];
+        if (resultList) {
+            resultList.parentNode.removeChild(resultList);
         }
     }
 
@@ -302,12 +320,12 @@
         http.onreadystatechange = function () {
             //Call a function when the state changes.
             if (http.readyState == 4 && http.status == 200) {
-                prepareToRenderResult();
                 var response = JSON.parse(http.responseText);
                 renderResponse(response, params);
             }
         };
         http.send(urlParamString);
+        prepareToRenderResult();
     }
 
     // ---------------------------------------------------
