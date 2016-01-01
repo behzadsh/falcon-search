@@ -85,7 +85,7 @@
     // ------------------------------------
     function resultBoxHtmlByResultBoxObj(resultBoxObj) {
         Object.keys(resultBoxObj).forEach(function (key) {
-            if (typeof(resultBoxObj[key]) == 'object') {
+            if (typeof(resultBoxObj[key]) == 'object' && resultBoxObj[key] !== null) {
                 resultBoxObj[key] = resultBoxObj[key].join(' ..... ')
                 if (key != 'title') resultBoxObj[key] += ' .....'
             } else if (resultBoxObj[key] != undefined) {
