@@ -1,6 +1,7 @@
 <?php
 namespace FalconSearch\Services;
 
+use Carbon\Carbon;
 use Elasticsearch\Client;
 
 class SearchService
@@ -246,6 +247,14 @@ class SearchService
     protected function pruneResponse($search)
     {
         unset($search['_shards']);
+
+        foreach ($search['hits']['hits'] as $hit) {
+            $date = $hit['_source']['date'];
+            if (!is_null($date)) {
+                $newDate = Carbon::createFromFormat('Y-m-d\TG:i:sP', $date);
+                $hit['_source']['date'] = $newDate->format('M j, Y');
+            }
+        }
 
         return $search;
     }
