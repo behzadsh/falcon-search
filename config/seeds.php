@@ -11,5 +11,9 @@ return [
     'http://www.nbcnews.com/robots.txt',
     'http://www.pcmag.com/robots.txt',
     'http://www.t3.com/robots.txt',
-    'http://thenextweb.com/robots.txt'
+    'http://thenextweb.com/robots.txt',
+    'http://www.ilna.ir/robots.txt',
+    'http://www.farsnews.com/robots.txt',
+    'http://www.mehrnews.com/robots.txt',
+    'http://www.tasnimnews.com/robots.txt',
 ];
