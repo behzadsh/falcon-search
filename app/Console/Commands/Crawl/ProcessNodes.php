@@ -183,38 +183,44 @@ class ProcessNodes extends Command
      */
     protected function pruneContent($node)
     {
-        if (is_null($node)) {
+        if (is_null($node) || empty($node->textContent)) {
             return null;
-        }
+        } else {
+            if ($node->hasChildNodes()) {
+                $blackList = [];
 
-        if ($node->hasChildNodes()) {
-            $blackList = [];
+                /** @var \DOMNode $child */
+                foreach ($node->childNodes as $child) {
+                    if ($child instanceof \DOMCdataSection) {
+                        array_push($blackList, $child);
+                        continue;
+                    } elseif ($child instanceof \DOMText) {
+                        continue;
+                    } elseif (!$child instanceof \DOMElement) {
+                        array_push($blackList, $child);
+                        continue;
+                    }
 
-            /** @var \DOMNode $child */
-            foreach ($node->childNodes as $child) {
-                if (!$child instanceof \DOMElement) {
-                    continue;
-                }
-
-                /** @var \DOMElement $child */
-                if ($this->shouldBeIgnored($child)) {
-                    array_push($blackList, $child);
-                } else {
-                    $newChild = $this->pruneContent($child);
-                    if (is_null($newChild)) {
+                    /** @var \DOMElement $child */
+                    if ($this->shouldBeIgnored($child)) {
                         array_push($blackList, $child);
                     } else {
-                        $node->replaceChild($newChild, $child);
+                        $newChild = $this->pruneContent($child);
+                        if (is_null($newChild)) {
+                            array_push($blackList, $child);
+                        } else {
+                            $node->replaceChild($newChild, $child);
+                        }
                     }
                 }
+
+                $node = $this->removeBlackNodes($node, $blackList);
+            }  elseif (empty($node->textContent)) {
+                return null;
             }
 
-            $node = $this->removeBlackNodes($node, $blackList);
-        } elseif (empty($node->textContent)) {
-            return null;
+            return $node;
         }
-
-        return $node;
     }
 
     protected function shouldBeIgnored(\DOMElement $node)
