@@ -141,7 +141,6 @@ class ProcessNodes extends Command
 
             if (is_null($title)) {
                 $this->counter['empty_url']++;
-                //\Log::debug('Empty content', $data);
                 $this->logDebugInfo('Empty content', $data);
                 continue;
             }
@@ -215,7 +214,7 @@ class ProcessNodes extends Command
                 }
 
                 $node = $this->removeBlackNodes($node, $blackList);
-            }  elseif (empty($node->textContent)) {
+            } elseif (empty($node->textContent)) {
                 return null;
             }
 

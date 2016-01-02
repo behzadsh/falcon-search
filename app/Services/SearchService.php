@@ -77,22 +77,22 @@ class SearchService
     protected function runQuery()
     {
         $params = [
-            'index' => 'sites',
-            'type'  => 'default',
-            'size'  => self::SIZE,
-            'from'  => ($this->page - 1) * self::SIZE,
-            'body'  => [
+            'index'   => 'sites',
+            'type'    => 'default',
+            'size'    => self::SIZE,
+            'from'    => ($this->page - 1) * self::SIZE,
+            'body'    => [
                 'query'     => [
                     'filtered' => $this->buildQuery()
                 ],
                 'highlight' => [
-                    'order'     => 'score',
-                    'fields'    => [
+                    'order'  => 'score',
+                    'fields' => [
                         'content' => [
                             'fragment_size'       => 150,
                             'number_of_fragments' => 3
                         ],
-                        'title' => [
+                        'title'   => [
                             'pre_tags'  => ['<em>'],
                             'post_tags' => ['</em>']
                         ]
