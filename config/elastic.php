@@ -5,7 +5,7 @@ return [
     'index' => 'sites',
     'body'  => [
         'settings' => [
-            'number_of_shards'   => 10,
+            'number_of_shards'   => 20,
             'number_of_replicas' => 0,
         ],
         'mapping'  => [
