@@ -99,7 +99,7 @@ class SearchService
                     ]
                 ]
             ],
-            '_source' => ['title', 'date', 'original.url']
+            '_source' => ['title', 'date', 'url']
         ];
 
         return $this->pruneResponse($this->client->search($params));

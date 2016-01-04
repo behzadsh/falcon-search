@@ -11,29 +11,21 @@ return [
         'mapping'  => [
             'default' => [
                 'properties' => [
-                    'title'    => [
+                    'title'   => [
                         'type'     => 'string',
                         'index'    => 'analyzed',
                         'analyzer' => 'english'
                     ],
-                    'content'  => [
+                    'content' => [
                         'type'     => 'string',
                         'index'    => 'analyzed',
                         'analyzer' => 'english'
                     ],
-                    'hash_id'  => ['type' => 'string', 'index' => 'not_analyzed'],
-                    'date'     => ['type' => 'date', 'format' => 'date_time_no_millis'],
-                    'original' => [
-                        'type'       => 'object',
-                        'properties' => [
-                            'title'   => ['type' => 'string', 'index' => 'no'],
-                            'content' => ['type' => 'string', 'index' => 'no'],
-                            'url'     => ['type' => 'string', 'index' => 'no']
-                        ]
-                    ]
+                    'hash_id' => ['type' => 'string', 'index' => 'not_analyzed'],
+                    'date'    => ['type' => 'date', 'format' => 'date_time_no_millis'],
+                    'url'     => ['type' => 'string', 'index' => 'no']
                 ]
             ]
         ]
     ]
-
 ];

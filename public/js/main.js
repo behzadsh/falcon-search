@@ -179,7 +179,7 @@
                 var resultItem = {
                     title: (item.highlight.title) ? item.highlight.title : item._source.title,
                     desc: item.highlight.content,
-                    url: item._source.original.url,
+                    url: item._source.url,
                     date: item._source.date
                 };
                 resultHtml += resultBoxHtmlByResultBoxObj(resultItem);

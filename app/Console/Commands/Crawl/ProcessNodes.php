@@ -274,15 +274,11 @@ class ProcessNodes extends Command
             'type'  => 'default',
             'id'    => $hashId,
             'body'  => [
-                'title'    => $title,
-                'content'  => $content,
-                'hash_id'  => $hashId,
-                'date'     => ($date) ? Carbon::createFromTimestamp($date)->toW3cString() : null,
-                'original' => [
-                    'title'   => $title,
-                    'content' => $content,
-                    'url'     => $url
-                ]
+                'title'   => $title,
+                'content' => $content,
+                'hash_id' => $hashId,
+                'date'    => ($date) ? Carbon::createFromTimestamp($date)->toW3cString() : null,
+                'url'     => $url
             ]
         ];
 
