@@ -12,14 +12,16 @@ return [
             'default' => [
                 'properties' => [
                     'title'   => [
-                        'type'     => 'string',
-                        'index'    => 'analyzed',
-                        'analyzer' => 'english'
+                        'type'        => 'string',
+                        'index'       => 'analyzed',
+                        'analyzer'    => 'english',
+                        'term_vector' => 'with_positions_offsets'
                     ],
                     'content' => [
-                        'type'     => 'string',
-                        'index'    => 'analyzed',
-                        'analyzer' => 'english'
+                        'type'        => 'string',
+                        'index'       => 'analyzed',
+                        'analyzer'    => 'english',
+                        'term_vector' => 'with_positions_offsets'
                     ],
                     'hash_id' => ['type' => 'string', 'index' => 'not_analyzed'],
                     'date'    => ['type' => 'date', 'format' => 'date_time_no_millis'],
