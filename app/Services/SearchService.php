@@ -3,6 +3,7 @@ namespace FalconSearch\Services;
 
 use Carbon\Carbon;
 use Elasticsearch\Client;
+use Illuminate\Support\Str;
 
 class SearchService
 {
@@ -99,7 +100,7 @@ class SearchService
                     ]
                 ]
             ],
-            '_source' => ['title', 'date', 'url']
+            '_source' => ['title', 'date', 'url', 'content']
         ];
 
         return $this->pruneResponse($this->client->search($params));
@@ -254,6 +255,8 @@ class SearchService
                 $newDate = Carbon::createFromFormat('Y-m-d\TG:i:sP', $date);
                 $search['hits']['hits'][$key]['_source']['date'] = $newDate->format('M j, Y');
             }
+
+            $search['hits']['hits'][$key]['_source']['content'] = str_limit($hit['_source']['content'], 300);
         }
 
         return $search;
