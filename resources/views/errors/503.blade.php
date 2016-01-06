@@ -35,12 +35,18 @@
                 font-size: 72px;
                 margin-bottom: 40px;
             }
+
+            .subTitle {
+                font-size: 48px;
+                margin-bottom: 40px;
+            }
         </style>
     </head>
     <body>
         <div class="container">
             <div class="content">
-                <div class="title">Be right back.</div>
+                <div class="title">Be Right Back!</div>
+                <div class="subTitle">Reindexing data. Please come back later!</div>
             </div>
         </div>
     </body>
