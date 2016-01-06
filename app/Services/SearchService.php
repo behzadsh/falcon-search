@@ -108,19 +108,34 @@ class SearchService
 
     protected function buildQuery()
     {
-        return [
-            'query'  => [
-                'bool' => [
-                    'should' => $this->getQueries()
+        $query = [];
+        $filter = [];
+
+        if (!empty($this->terms) || !empty($this->phrases)) {
+            $query = [
+                'query' => [
+                    'bool' => [
+                        'should' => $this->getQueries()
+                    ]
+                ],
+            ];
+        }
+
+        if (
+            !empty($this->mustNotPhrases) || !empty($this->mustNotTerms) ||
+            !empty($this->mustPhrases) || !empty($this->mustTerms)
+        ) {
+            $filter = [
+                'filter' => [
+                    'bool' => [
+                        'must'     => $this->getMustFilters(),
+                        'must_not' => $this->getMustNotFilters()
+                    ]
                 ]
-            ],
-            'filter' => [
-                'bool' => [
-                    'must'     => $this->getMustFilters(),
-                    'must_not' => $this->getMustNotFilters()
-                ]
-            ]
-        ];
+            ];
+        }
+
+        return array_merge($query, $filter);
     }
 
     protected function getMustFilters()
