@@ -112,7 +112,7 @@ class ProcessNodes extends Command
 
             $limit--;
 
-            if (!isset($data['url']) || (filter_var($data['url'], FILTER_VALIDATE_URL) === false)) {
+            if (!isset($data['url'])) {
                 $this->counter['failed_url']++;
                 $this->logDebugInfo('Invalid url', $data);
                 continue;
