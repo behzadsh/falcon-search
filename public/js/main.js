@@ -177,8 +177,8 @@
         if (response.hits.hits.length > 0) {
             response.hits.hits.forEach(function (item) {
                 var resultItem = {
-                    title: (item.highlight) ? item.highlight.title : item._source.title,
-                    desc: (item.highlight) ? item.highlight.content : item._source.content,
+                    title: (item.highlight && item.highlight.title) ? item.highlight.title : item._source.title,
+                    desc: (item.highlight && item.highlight.content) ? item.highlight.content : item._source.content,
                     url: item._source.url,
                     date: item._source.date
                 };
